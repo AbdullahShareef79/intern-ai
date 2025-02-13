@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        img.logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="static/images/logo.png" alt="Company Logo" class="logo">
+        <!-- Ensure logo.png is in the same directory -->
+        <h2>Upload 2D and 3D Images</h2>
+        <p>Our system analyzes 2D and 3D images to recommend the best fastener for your application.</p>
+
+        <form action="/" method="post" enctype="multipart/form-data">
+            <label for="image_2d">Upload 2D Image:</label><br>
+            <input type="file" name="image_2d" required><br><br>
+            
+            <label for="image_3d">Upload 3D Image:</label><br>
+            <input type="file" name="image_3d" required><br><br>
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+</body>
+</html>

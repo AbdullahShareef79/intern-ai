@@ -1,0 +1,89 @@
+class FastenerAgent:
+    def __init__(self, guideline):
+        """Initialize the fastener agent with structured guidelines."""
+        self.guideline = guideline
+
+    def _parse_length(self, length_str):
+        """Parse a length range string (e.g., '20-100 mm') into min and max values."""
+        try:
+            # Handle different formats: "20-100 mm", "8mm-50mm", "15-120"
+            clean_str = length_str.lower().replace('mm', '').strip()
+            parts = clean_str.split('-')
+            if len(parts) != 2:
+                return None, None
+            return float(parts[0].strip()), float(parts[1].strip())
+        except (ValueError, AttributeError):
+            return None, None
+
+    def _match_fastener(self, fastener_type, features):
+        """Check if features match a specific fastener type's requirements."""
+        specs = self.guideline.get(fastener_type, {})
+        reason = specs.get("reason", "")
+        
+        # Get critical features
+        hole_depth = features.get('hole_depth', 0)
+        geometry_type = features.get('geometry_type', '').lower()
+
+        # Check geometry compatibility
+        geometry_match = False
+        if fastener_type == "Flat Head Screws":
+            geometry_match = "flat" in geometry_type
+        elif fastener_type == "Rounded Head Screws":
+            geometry_match = "rounded" in geometry_type
+        else:  # Hex/Socket don't require specific geometry
+            geometry_match = True
+
+        if not geometry_match:
+            return False, reason
+
+        # Check dimensional requirements
+        size_requirements = {
+            "Hex Head Screws": "length_range",
+            "Socket Head Screws": "thread_length",
+            "Flat Head Screws": "length_range",
+            "Rounded Head Screws": None  # No size requirements
+        }
+
+        req_field = size_requirements[fastener_type]
+        if not req_field:
+            return True, reason  # Rounded heads only need geometry match
+
+        for size_info in specs.get("sizes", []):
+            length_str = size_info.get(req_field)
+            if not length_str:
+                continue
+                
+            min_len, max_len = self._parse_length(length_str)
+            if min_len and max_len and min_len <= hole_depth <= max_len:
+                return True, reason
+
+        return False, reason
+
+    def find_best_fastener(self, features):
+        """Find the best fastener type based on extracted features."""
+        try:
+            priority_order = [
+                "Flat Head Screws",
+                "Rounded Head Screws",
+                "Hex Head Screws",
+                "Socket Head Screws"
+            ]
+
+            for fastener_type in priority_order:
+                matches, reason = self._match_fastener(fastener_type, features)
+                if matches:
+                    return {
+                        "fastener_type": fastener_type,
+                        "explanation": reason
+                    }
+
+            return {
+                "fastener_type": "unknown",
+                "explanation": "No suitable fastener found matching all requirements"
+            }
+
+        except Exception as e:
+            return {
+                "fastener_type": "error",
+                "explanation": f"Selection error: {str(e)}"
+            }
