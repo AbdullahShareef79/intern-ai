@@ -2,272 +2,253 @@ import streamlit as st
 import os
 import tempfile
 import logging
+from dataclasses import dataclass
+from typing import Tuple, Optional, Dict, Any
 from PIL import Image
+from pathlib import Path
 from main import main
-import io
+
+# Constants
+MAX_FILE_SIZE_MB = 5
+MAX_IMAGE_DIMENSION = 2000
+ALLOWED_IMAGE_TYPES = {'image/jpeg', 'image/png'}
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(), logging.FileHandler("app.log")],
 )
 logger = logging.getLogger(__name__)
 
-def validate_image(uploaded_file):
-    """
-    Validate uploaded image file for size, format, and dimensions
-    Returns: bool, error_message (if any)
-    """
-    try:
-        if uploaded_file is None:
-            return False, "No file uploaded"
-        
-        # Check file size (max 5MB)
-        if uploaded_file.size > 5 * 1024 * 1024:
-            return False, f"File {uploaded_file.name} is too large. Maximum size is 5MB"
-        
-        # Check file type
-        allowed_types = ['image/jpeg', 'image/png']
-        if uploaded_file.type not in allowed_types:
-            return False, f"File {uploaded_file.name} must be PNG or JPEG format"
-            
-        # Verify image can be opened and check dimensions
-        img = Image.open(uploaded_file)
-        max_dimension = 2000
-        if img.width > max_dimension or img.height > max_dimension:
-            return False, f"Image dimensions must be under {max_dimension}x{max_dimension} pixels"
-        
-        # Reset file pointer after verification
-        uploaded_file.seek(0)
-        return True, None
-        
-    except Exception as e:
-        logger.error(f"Image validation error for {uploaded_file.name}: {str(e)}")
-        return False, f"Invalid image file: {str(e)}"
+@dataclass
+class ImageValidationResult:
+    """Data class for image validation results"""
+    is_valid: bool
+    error_message: Optional[str] = None
 
-def save_uploaded_file(uploaded_file, temp_dir):
-    """
-    Save uploaded file to temporary directory
-    Returns: file_path or None if error
-    """
-    try:
-        if not os.path.exists(temp_dir):
-            os.makedirs(temp_dir)
-            
-        file_path = os.path.join(temp_dir, uploaded_file.name)
-        uploaded_file.seek(0)
-        
-        with open(file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-            
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Failed to save file to {file_path}")
-            
-        logger.info(f"Successfully saved file to {file_path}")
-        return file_path
-        
-    except Exception as e:
-        logger.error(f"Error saving file {uploaded_file.name}: {str(e)}")
-        return None
+@dataclass
+class ProcessingResult:
+    """Data class for processing results"""
+    features: Dict[str, Any]
+    fastener_decision: Dict[str, Any]
+    manufacturing_decision: Dict[str, Any]
+    success: bool
+    error_message: Optional[str] = None
 
-def display_feature_details(features):
-    """Display feature details in a formatted way"""
-    try:
-        st.write("### Geometry Details")
-        
-        # Create three columns for metrics
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Hole Depth", f"{features.get('hole_depth', 0):.2f} mm")
-        with col2:
-            st.metric("Hole Diameter", f"{features.get('hole_diameter', 0):.2f} mm")
-        with col3:
-            st.metric("Geometry Type", features.get('geometry_type', 'unknown'))
-        
-        # Show additional features if present
-        if 'class_names' in features and features['class_names']:
-            st.write("### Detected Objects")
-            for class_name in features['class_names']:
-                st.write(f"- {class_name}")
-                
-    except Exception as e:
-        logger.error(f"Error displaying features: {str(e)}")
-        st.error("Error displaying feature details")
+class FastenerRecommenderUI:
+    """Main UI class for the Fastener Recommender application"""
 
-def main_ui():
-    """Main UI function for the Streamlit app"""
-    try:
+    def __init__(self):
+        """Initialize the UI components"""
+        self.setup_page_config()
+        self.apply_custom_styles()
+
+    @staticmethod
+    def setup_page_config():
+        """Configure the Streamlit page settings"""
         st.set_page_config(
-            page_title="Fastener Recommender",
+            page_title="AI Fastener & Manufacturing Recommender",
             page_icon="🔩",
             layout="wide",
-            initial_sidebar_state="expanded"
+            initial_sidebar_state="expanded",
         )
-        
-        # Custom CSS for better styling
-        st.markdown("""
+
+    @staticmethod
+    def apply_custom_styles():
+        """Apply custom CSS styles"""
+        st.markdown(
+            """
             <style>
-            .main {
-                background-color: #f0f2f6;
-                padding: 2rem;
-            }
-            .stButton>button {
-                width: 100%;
-            }
-            .upload-text {
-                font-size: 1.2rem;
-                font-weight: bold;
-                margin-bottom: 1rem;
-            }
-            .results-container {
-                padding: 1.5rem;
-                border-radius: 0.5rem;
-                background-color: white;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .metric-card {
-                padding: 1rem;
-                border-radius: 0.3rem;
-                background-color: #f8f9fa;
-                margin-bottom: 1rem;
-            }
+            .main { background-color: #f5f7f9; padding: 2rem; }
+            .stButton>button { width: 100%; background-color: #2e6de4; color: white; font-weight: bold; }
+            .metric-container { background-color: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+            .results-section { margin-top: 2rem; padding: 1.5rem; background-color: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+            .recommendation-card { padding: 1rem; background-color: #f0f7ff; border-left: 4px solid #2e6de4; margin: 1rem 0; }
             </style>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
 
-        # Header
-        st.title("🔩 AI Fastener Recommendation System")
-        st.markdown("""
-            This system analyzes your geometry and recommends the most suitable fastener.
-            Upload both 2D and depth images to get started.
-        """)
-
-        # Sidebar configuration
+    def render_sidebar(self) -> Tuple[Optional[Any], Optional[Any]]:
+        """Render sidebar elements and return uploaded files"""
         with st.sidebar:
             st.header("📤 Upload Images")
-            
-            img_2d = st.file_uploader(
-                "2D Image (PNG/JPG)",
-                type=["png", "jpg", "jpeg"],
-                help="Upload a clear front view of your geometry"
-            )
-            
-            img_3d = st.file_uploader(
-                "3D Depth Image (PNG)",
-                type=["png"],
-                help="Upload a depth map image of your geometry"
-            )
-            
-            st.markdown("---")
-            
-            with st.expander("ℹ️ Usage Guidelines", expanded=True):
-                st.markdown("""
-                    - Images should be clear and well-lit
-                    - Maximum file size: 5MB
-                    - Maximum dimensions: 2000x2000 pixels
-                    - Supported formats: PNG, JPG
-                    - Depth image should contain valid depth data
-                """)
 
-        # Main content area
-        if img_2d and img_3d:
-            # Validate images
-            valid_2d, error_2d = validate_image(img_2d)
-            valid_3d, error_3d = validate_image(img_3d)
-            
-            if not (valid_2d and valid_3d):
-                if not valid_2d:
-                    st.error(error_2d)
-                if not valid_3d:
-                    st.error(error_3d)
+            img_2d = st.file_uploader(
+                "2D Image", type=["png", "jpg", "jpeg"], help="Upload a clear front view image"
+            )
+
+            img_3d = st.file_uploader(
+                "Depth Image", type=["png"], help="Upload a depth map image"
+            )
+
+            st.markdown("---")
+
+            with st.expander("📋 Guidelines", expanded=True):
+                st.markdown(
+                    """
+                    #### Requirements:
+                    - Clear, well-lit images
+                    - Max size: 5MB per image
+                    - Max dimensions: 2000x2000px
+                    - Formats: PNG, JPG
+
+                    #### Best Practices:
+                    - Center the object in frame
+                    - Ensure proper lighting
+                    - Avoid shadows and reflections
+                    - Use consistent scale
+                    """
+                )
+
+        return img_2d, img_3d
+
+    @staticmethod
+    def display_metrics(features: Dict[str, Any]):
+        """Display feature metrics in a formatted grid"""
+        st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+
+        cols = st.columns(3)
+        metrics = [
+            ("Hole Depth", f"{features.get('hole_depth', 0):.2f} mm"),
+            ("Hole Diameter", f"{features.get('hole_diameter', 0):.2f} mm"),
+            ("Geometry Type", features.get("geometry_type", "Unknown")),
+        ]
+
+        for col, (label, value) in zip(cols, metrics):
+            with col:
+                st.metric(label, value)
+
+        if "class_names" in features and features["class_names"]:
+            st.write("#### Detected Objects:")
+            for class_name in features["class_names"]:
+                st.markdown(f"- {class_name}")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    def process_images(self, img_2d_path: str, img_3d_path: str) -> ProcessingResult:
+        """Process uploaded images and return results."""
+        try:
+            manual_path = "E:\\Feature extraciton\\Manufacturing Expert Manual.docx"
+            features, fastener_decision, manufacturing_decision = main(
+                img_2d_path, img_3d_path, manual_path
+            )
+
+            if not features or not fastener_decision or not manufacturing_decision:
+                return ProcessingResult(
+                    features={},
+                    fastener_decision={},
+                    manufacturing_decision={},
+                    success=False,
+                    error_message="Analysis returned empty results",
+                )
+
+            return ProcessingResult(
+                features=features,
+                fastener_decision=fastener_decision,
+                manufacturing_decision=manufacturing_decision,
+                success=True,
+            )
+
+        except Exception as e:
+            logger.error(f"Processing error: {str(e)}")
+            return ProcessingResult(
+                features={},
+                fastener_decision={},
+                manufacturing_decision={},
+                success=False,
+                error_message=str(e),
+            )
+
+    def display_recommendation(self, decision: Dict[str, Any], title: str, icon: str):
+        """Display recommendation with professional styling and structured layout."""
+
+        # Map machines to icons
+        machine_icons = {
+            "Laser Cutting or Waterjet Cutting": "🔦",
+            "CNC Lathe or CNC Turning": "⚙️",
+            "CNC Milling or 5-Axis Machining": "🛠️",
+            "EDM (Electrical Discharge Machining)": "⚡",
+            "3D Printing or Injection Molding": "🖨️"
+        }
+        
+        # Extract details
+        machine = decision.get("machine", "Unknown")
+        reason = decision.get("reason", "No explanation available")
+        
+        # Select appropriate icon
+        machine_icon = machine_icons.get(machine, "🏭")  # Default factory icon
+        
+        # Apply enhanced CSS styles for a professional look
+        st.markdown(f"""
+            <div style="
+                background-color: #eef6ff;
+                padding: 15px;
+                border-radius: 12px;
+                border-left: 6px solid #2e6de4;
+                font-size: 18px;
+                box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+            ">
+                <b>{machine_icon} {title}</b> <br>
+                <span style="font-size: 22px; font-weight: bold; color: #2e6de4;">{machine}</span> <br>
+                <span style="color: #333;">📝 <i>{reason}</i></span>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # Display status indicators
+        status = decision.get("machine", "").lower()
+        if "error" in status:
+            st.error("⚠️ Processing error occurred")
+        elif "unknown" in status:
+            st.warning("⚠️ No clear match found")
+        else:
+            st.success(f"✅ {title} Recommended", icon=icon)
+
+    def run(self):
+        """Main application loop."""
+        try:
+            st.title("🔩 AI Fastener & Manufacturing Recommendation System")
+            st.markdown("Upload images to receive AI-powered fastener & manufacturing suggestions.")
+
+            # Get uploaded files
+            img_2d, img_3d = self.render_sidebar()
+
+            if not (img_2d and img_3d):
+                st.info("👈 Please upload both required images to begin analysis")
                 return
 
+            # Process images
             with tempfile.TemporaryDirectory() as temp_dir:
-                # Save uploaded files
-                img_2d_path = save_uploaded_file(img_2d, temp_dir)
-                img_3d_path = save_uploaded_file(img_3d, temp_dir)
-                
-                if not (img_2d_path and img_3d_path):
-                    st.error("Error saving uploaded files")
-                    return
+                temp_dir = Path(temp_dir)
 
-                # Display image previews
-                st.write("### 📸 Image Previews")
-                try:
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.image(
-                            img_2d,
-                            caption="2D Geometry",
-                            use_container_width=True
-                        )
-                    with col2:
-                        st.image(
-                            img_3d,
-                            caption="Depth Map",
-                            use_container_width=True
-                        )
-                except Exception as e:
-                    logger.error(f"Error displaying images: {str(e)}")
-                    st.error("Error displaying image previews")
-                    return
+                # Save files
+                img_paths = {"2D": temp_dir / img_2d.name, "3D": temp_dir / img_3d.name}
+                for img_type, uploaded_file in {"2D": img_2d, "3D": img_3d}.items():
+                    with open(img_paths[img_type], "wb") as f:
+                        f.write(uploaded_file.getbuffer())
 
                 # Process images
                 with st.spinner("🔄 Analyzing geometry..."):
-                    try:
-                        features, decision = main(img_2d_path, img_3d_path)
-                        
-                        if not features or not decision:
-                            st.error("Analysis returned empty results")
-                            return
-                        
-                        # Results section
-                        st.markdown("---")
-                        st.write("## 📊 Analysis Results")
-                        
-                        # Display extracted features
-                        with st.expander("View Detailed Features", expanded=True):
-                            if isinstance(features, dict):
-                                display_feature_details(features)
-                            else:
-                                st.error("Invalid features format returned from analysis")
-                                return
-                        
-                        # Display recommendation
-                        st.markdown("---")
-                        st.write("## 🎯 Fastener Recommendation")
-                        
-                        recommendation_cols = st.columns([2, 3])
-                        with recommendation_cols[0]:
-                            st.metric(
-                                "Recommended Fastener",
-                                decision.get("fastener_type", "Unknown").replace("_", " ").title()
-                            )
-                        
-                        with recommendation_cols[1]:
-                            explanation = decision.get('explanation', 'No explanation available')
-                            st.info(f"**Reasoning:** {explanation}")
-                        
-                        # Status indicator
-                        if "error" in decision.get("fastener_type", "").lower():
-                            st.error("⚠️ Processing error occurred", icon="⚠️")
-                        elif "unknown" in decision.get("fastener_type", "").lower():
-                            st.warning("⚠️ No clear match found", icon="⚠️")
-                        else:
-                            st.success("✅ High confidence recommendation", icon="✅")
-                            
-                    except Exception as e:
-                        logger.error(f"Error in analysis: {str(e)}")
-                        st.error("❌ Processing Error")
-                        with st.expander("View Error Details"):
-                            st.exception(e)
-        else:
-            # Initial state
-            st.info("👈 Please upload both images in the sidebar to begin analysis")
+                    result = self.process_images(str(img_paths["2D"]), str(img_paths["3D"]))
 
-    except Exception as e:
-        logger.error(f"Main UI error: {str(e)}")
-        st.error("An unexpected error occurred. Please try again.")
+                    if not result.success:
+                        st.error(f"Analysis failed: {result.error_message}")
+                        return
+
+                    # Display results
+                    st.markdown("## 📊 Analysis Results")
+                    self.display_metrics(result.features)
+
+                    st.markdown("## 🎯 Fastener Recommendation")
+                    self.display_recommendation(result.fastener_decision, "🔩 Fastener Type", "✅")
+
+                    st.markdown("## 🏭 Manufacturing Process")
+                    self.display_recommendation(result.manufacturing_decision, "🏭 Manufacturing Process", "✅")
+
+        except Exception as e:
+            logger.error(f"Application error: {str(e)}")
+            st.error("An unexpected error occurred. Please try again.")
 
 if __name__ == "__main__":
-    main_ui()
+    FastenerRecommenderUI().run()

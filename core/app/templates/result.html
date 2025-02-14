@@ -3,56 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results</title>
+    <title>Fastener Decision Results</title>
     <style>
+        /* General Styles */
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
         }
+
         .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
+
         img.logo {
-            max-width: 150px;
+            max-width: 180px;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            font-size: 28px;
+            color: #2c3e50;
             margin-bottom: 20px;
         }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+        }
+
         .result-box {
             background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 25px;
+            text-align: left;
+            border: 1px solid #e0e0e0;
+        }
+
+        .result-box strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        pre {
+            background: #e9ecef;
             padding: 15px;
             border-radius: 8px;
-            margin-top: 15px;
-            text-align: left;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #333;
         }
+
         .back-link {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
+            margin-top: 30px;
+            padding: 12px 30px;
             font-size: 16px;
+            font-weight: 600;
             background-color: #28a745;
             color: white;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
         }
+
         .back-link:hover {
             background-color: #218838;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+
+            p {
+                font-size: 14px;
+            }
+
+            .back-link {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
+        <!-- Logo -->
         <img src="static/images/logo.png" alt="Company Logo" class="logo">
-  
+
+        <!-- Title -->
         <h2>Fastener Decision</h2>
         <p>Based on the image analysis, we have determined the most suitable fastener for your application.</p>
 
+        <!-- Results Box -->
         <div class="result-box">
             <p><strong>Extracted Features:</strong></p>
             <pre>{{ features }}</pre>
@@ -61,7 +123,8 @@
             <pre>{{ fastener_decision }}</pre>
         </div>
 
-        <a href="/" class="back-link">Upload Another</a>
+        <!-- Back Link -->
+        <a href="/" class="back-link">Upload Another Image</a>
     </div>
 
 </body>

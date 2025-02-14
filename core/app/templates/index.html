@@ -3,56 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Images</title>
+    <meta name="description" content="AI-powered fastener recommendation system - Upload your 2D and 3D images for analysis">
+    <title>Fastener Recommender | Image Upload</title>
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="static/images/logo.png" as="image">
+    
     <style>
+        /* CSS Reset and Variables */
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary-color: #64748b;
+            --background-color: #f8fafc;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --radius-md: 0.375rem;
+            --font-sans: system-ui, -apple-system, sans-serif;
+        }
+
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
+            font-family: var(--font-sans);
+            line-height: 1.5;
+            color: #1a1a1a;
+            background-color: var(--background-color);
+            padding: 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
+
+        /* Container Styles */
         .container {
-            max-width: 500px;
-            margin: auto;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 32rem;
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s ease;
         }
-        img.logo {
+
+        .container:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Logo Styles */
+        .logo-container {
+            margin-bottom: 2rem;
+            padding: 1rem;
+        }
+
+        .logo {
             max-width: 150px;
-            margin-bottom: 20px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
+
+        /* Typography */
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 1rem;
+        }
+
+        .description {
+            color: var(--secondary-color);
+            margin-bottom: 2rem;
+            font-size: 0.975rem;
+        }
+
+        /* Form Styles */
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-label {
+            font-weight: 500;
+            color: #334155;
+            font-size: 0.875rem;
+        }
+
+        .file-input-container {
+            position: relative;
+            padding: 1.5rem;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            background-color: #f8fafc;
             cursor: pointer;
-            border-radius: 5px;
+            transition: all 0.2s ease;
         }
-        button:hover {
-            background-color: #0056b3;
+
+        .file-input-container:hover {
+            border-color: var(--primary-color);
+            background-color: #f0f9ff;
+        }
+
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--secondary-color);
+        }
+
+        .file-input-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        /* Button Styles */
+        .submit-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .submit-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .submit-button:active {
+            transform: translateY(0);
+        }
+
+        /* Progress Indicator */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: var(--border-color);
+            border-radius: 2px;
+            margin-top: 1rem;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+            }
+
+            .description {
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .container,
+            .submit-button,
+            .progress-bar-fill {
+                transition: none;
+            }
+        }
+
+        /* Error States */
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .file-input-container.error {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+        }
+
+        /* Success States */
+        .file-input-container.success {
+            border-color: #059669;
+            background-color: #f0fdf4;
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <img src="static/images/logo.png" alt="Company Logo" class="logo">
-        <!-- Ensure logo.png is in the same directory -->
-        <h2>Upload 2D and 3D Images</h2>
-        <p>Our system analyzes 2D and 3D images to recommend the best fastener for your application.</p>
+        <div class="logo-container">
+            <img src="static/images/logo.png" alt="Company Logo" class="logo">
+        </div>
 
-        <form action="/" method="post" enctype="multipart/form-data">
-            <label for="image_2d">Upload 2D Image:</label><br>
-            <input type="file" name="image_2d" required><br><br>
-            
-            <label for="image_3d">Upload 3D Image:</label><br>
-            <input type="file" name="image_3d" required><br><br>
-            
-            <button type="submit">Submit</button>
+        <h1>Fastener Recommendation System</h1>
+        <p class="description">
+            Upload your 2D and 3D images for AI-powered analysis to receive precise fastener recommendations tailored to your specific requirements.
+        </p>
+
+        <form class="upload-form" action="/" method="post" enctype="multipart/form-data" id="uploadForm">
+            <div class="input-group">
+                <label class="input-label">2D Image Upload</label>
+                <div class="file-input-container" id="container2d">
+                    <input 
+                        type="file" 
+                        name="image_2d" 
+                        id="image2d" 
+                        class="file-input"
+                        accept="image/png,image/jpeg"
+                        required
+                    >
+                    <div class="file-input-label">
+                        <span class="file-input-icon">📁</span>
+                        <span>Drop your 2D image here or click to browse</span>
+                        <span style="font-size: 0.75rem">Supported formats: PNG, JPEG</span>
+                    </div>
+                </div>
+                <div class="error-message" id="error2d"></div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">3D Depth Image Upload</label>
+                <div class="file-input-container" id="container3d">
+                    <input 
+                        type="file" 
+                        name="image_3d" 
+                        id="image3d" 
+                        class="file-input"
+                        accept="image/png"
+                        required
+                    >
+                    <div class="file-input-label">
+                        <span class="file-input-icon">📁</span>
+                        <span>Drop your 3D depth image here or click to browse</span>
+                        <span style="font-size: 0.75rem">Supported format: PNG</span>
+                    </div>
+                </div>
+                <div class="error-message" id="error3d"></div>
+            </div>
+
+            <button type="submit" class="submit-button" id="submitBtn">
+                Analyze Images
+            </button>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-bar-fill" id="progressBarFill"></div>
+            </div>
         </form>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('uploadForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const progressBar = document.getElementById('progressBar');
+            const progressBarFill = document.getElementById('progressBarFill');
+            
+            // File input handling
+            ['2d', '3d'].forEach(type => {
+                const input = document.getElementById(`image${type}`);
+                const container = document.getElementById(`container${type}`);
+                const error = document.getElementById(`error${type}`);
+                
+                input.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    validateFile(file, type, container, error);
+                });
+
+                // Drag and drop handling
+                container.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    container.style.borderColor = 'var(--primary-color)';
+                });
+
+                container.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    container.style.borderColor = 'var(--border-color)';
+                });
+
+                container.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    container.style.borderColor = 'var(--border-color)';
+                    const file = e.dataTransfer.files[0];
+                    input.files = e.dataTransfer.files;
+                    validateFile(file, type, container, error);
+                });
+            });
+
+            function validateFile(file, type, container, error) {
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                const allowedTypes = type === '2d' 
+                    ? ['image/jpeg', 'image/png']
+                    : ['image/png'];
+
+                container.classList.remove('error', 'success');
+                error.style.display = 'none';
+
+                if (!file) return;
+
+                if (!allowedTypes.includes(file.type)) {
+                    showError(container, error, `Invalid file type. Please upload ${allowedTypes.join(' or ')}`);
+                    return;
+                }
+
+                if (file.size > maxSize) {
+                    showError(container, error, 'File size exceeds 5MB limit');
+                    return;
+                }
+
+                container.classList.add('success');
+            }
+
+            function showError(container, error, message) {
+                container.classList.add('error');
+                error.textContent = message;
+                error.style.display = 'block';
+            }
+
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                submitBtn.disabled = true;
+                progressBar.classList.add('active');
+                
+                // Simulate upload progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 5;
+                    progressBarFill.style.width = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        form.submit();
+                    }
+                }, 100);
+            });
+        });
+    </script>
 </body>
 </html>
