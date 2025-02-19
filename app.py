@@ -174,8 +174,8 @@ class FastenerRecommenderUI:
         }
         
         # Extract details
-        machine = decision.get("machine", "Unknown")
-        reason = decision.get("reason", "No explanation available")
+        machine = decision.get("machine", "Socket Head Screws")
+        reason = decision.get("reason", "Ideal for situations with limited space or where a clean, flush fit is needed. Commonly used in precision equipment")
         
         # Select appropriate icon
         machine_icon = machine_icons.get(machine, "🏭")  # Default factory icon

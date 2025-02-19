@@ -114,8 +114,8 @@ class FeatureExtraction:
 
 # Example Usage:
 if __name__ == "__main__":
-    image_path_2d = "sample_2d.jpg"  # Replace with actual 2D image path
-    depth_image_path_3d = "sample_3d.png"  # Replace with actual 3D depth image path
+    image_path_2d = "E:/Feature extraciton/intern-ai/Sample Images/Screenshot 2025-02-07 102945.png"  # Replace with actual 2D image path
+    depth_image_path_3d = "E:/Feature extraciton/intern-ai/Sample Images/Screenshot 2025-02-07 102305.png"  # Replace with actual 3D depth image path
 
     extractor = FeatureExtraction(image_path_2d, depth_image_path_3d)
     features = extractor.extract_features()
