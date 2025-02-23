@@ -123,7 +123,9 @@ Reason: Best for machining complex circular geometries.
 
 # Main execution
 if __name__ == "__main__":
-    image_path = "C:/Users/ASUS/Desktop/Sample Images/11.png"  # Use absolute path
+    image_path = "Sample Images/11.png"  # Use absolute path
+
+
 
     # Step 1: Detect shape
     shape_description = process_image(image_path)
