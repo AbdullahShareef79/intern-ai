@@ -1,0 +1,196 @@
+{
+    "fasteners": {
+        "Hex Head Screws": {
+            "description": "Used in heavy machinery and automotive applications where strength and durability are crucial.",
+            "materials": [
+                "Stainless Steel",
+                "Alloy Steel"
+            ],
+            "standards": [
+                "ISO",
+                "ANSI",
+                "DIN"
+            ],
+            "sizes": [
+                {
+                    "Hex Head Size (mm)": "M6",
+                    "Thread Pitch (mm)": 1.0,
+                    "Length (mm)": "20-100",
+                    "Tensile Strength (MPa)": "800-1000"
+                },
+                {
+                    "Hex Head Size (mm)": "M8",
+                    "Thread Pitch (mm)": 1.25,
+                    "Length (mm)": "25-120",
+                    "Tensile Strength (MPa)": "800-1000"
+                },
+                {
+                    "Hex Head Size (mm)": "M10",
+                    "Thread Pitch (mm)": 1.5,
+                    "Length (mm)": "30-150",
+                    "Tensile Strength (MPa)": "800-1000"
+                }
+            ]
+        },
+        "Socket Head Screws": {
+            "description": "Ideal for situations with limited space or where a clean, flush fit is needed. Common in precision equipment.",
+            "materials": [
+                "Stainless Steel",
+                "Black Oxide"
+            ],
+            "sizes": [
+                {
+                    "Socket Size (mm)": "M3",
+                    "Head Diameter (mm)": 5.5,
+                    "Head Height (mm)": 3.0,
+                    "Thread Length (mm)": "8-50"
+                },
+                {
+                    "Socket Size (mm)": "M5",
+                    "Head Diameter (mm)": 8.5,
+                    "Head Height (mm)": 5.0,
+                    "Thread Length (mm)": "10-60"
+                },
+                {
+                    "Socket Size (mm)": "M8",
+                    "Head Diameter (mm)": 13.0,
+                    "Head Height (mm)": 8.0,
+                    "Thread Length (mm)": "15-80"
+                }
+            ]
+        },
+        "Rounded Head Screws": {
+            "description": "Best for decorative or low-profile designs, used in furniture and consumer electronics.",
+            "materials": [
+                "Brass",
+                "Chrome-Plated"
+            ],
+            "sizes": [
+                {
+                    "Head Size (mm)": 4.0,
+                    "Thread Diameter (mm)": "M2",
+                    "Head Height (mm)": 1.6,
+                    "Common Finishes": [
+                        "Brass",
+                        "Chrome-plated"
+                    ]
+                },
+                {
+                    "Head Size (mm)": 6.0,
+                    "Thread Diameter (mm)": "M4",
+                    "Head Height (mm)": 2.5,
+                    "Common Finishes": [
+                        "Zinc",
+                        "Nickel-plated"
+                    ]
+                },
+                {
+                    "Head Size (mm)": 8.0,
+                    "Thread Diameter (mm)": "M6",
+                    "Head Height (mm)": 3.5,
+                    "Common Finishes": [
+                        "Stainless Steel",
+                        "Brass"
+                    ]
+                }
+            ]
+        },
+        "Flat Head Screws": {
+            "description": "Used when the screw must sit flush with the surface, such as in cabinetry or structural panels.",
+            "materials": [
+                "Stainless Steel",
+                "Zinc"
+            ],
+            "sizes": [
+                {
+                    "Screw Diameter (mm)": "M4",
+                    "Head Diameter (mm)": 7.5,
+                    "Countersink Angle": "90\u00b0",
+                    "Length Range (mm)": "8-50"
+                },
+                {
+                    "Screw Diameter (mm)": "M6",
+                    "Head Diameter (mm)": 11.0,
+                    "Countersink Angle": "90\u00b0",
+                    "Length Range (mm)": "10-80"
+                },
+                {
+                    "Screw Diameter (mm)": "M8",
+                    "Head Diameter (mm)": 14.5,
+                    "Countersink Angle": "90\u00b0",
+                    "Length Range (mm)": "15-120"
+                }
+            ]
+        }
+    },
+    "manufacturing_machines": {
+        "CNC Milling": {
+            "description": "Ideal for complex, multi-axis geometries.",
+            "material_compatibility": [
+                "Metals",
+                "Plastics"
+            ],
+            "typical_applications": [
+                "Aerospace Components",
+                "Engine Blocks"
+            ]
+        },
+        "CNC Turning (Lathes)": {
+            "description": "Best for cylindrical and rotationally symmetric parts.",
+            "material_compatibility": [
+                "Metals",
+                "Plastics"
+            ],
+            "typical_applications": [
+                "Shafts",
+                "Pipes",
+                "Bearings"
+            ]
+        },
+        "Injection Molding": {
+            "description": "Used for producing high-volume plastic components.",
+            "material_compatibility": [
+                "Plastics",
+                "Polymers"
+            ],
+            "typical_applications": [
+                "Consumer Products",
+                "Packaging"
+            ]
+        },
+        "Laser Cutting & Waterjet Cutting": {
+            "description": "Used for sheet metal and non-contact cutting processes.",
+            "material_compatibility": [
+                "Metals",
+                "Plastics",
+                "Ceramics"
+            ],
+            "typical_applications": [
+                "Automotive Panels",
+                "Enclosures"
+            ]
+        },
+        "3D Printing": {
+            "description": "Suitable for prototyping and low-volume production of intricate designs.",
+            "material_compatibility": [
+                "Plastics",
+                "Resins",
+                "Metals"
+            ],
+            "typical_applications": [
+                "Rapid Prototyping",
+                "Small Batches"
+            ]
+        },
+        "Press Machines (Stamping & Forming)": {
+            "description": "Used for high-speed, high-volume metal shaping.",
+            "material_compatibility": [
+                "Aluminum",
+                "Steel"
+            ],
+            "typical_applications": [
+                "Automotive Body Panels"
+            ]
+        }
+    }
+}
